@@ -1,0 +1,120 @@
+---
+title: "Practical Machine Learning"
+author: "Shivangi"
+date: "9/22/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## SYNOPSIS
+  
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+  
+## DATA
+  
+The training data for this project are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The test data are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+The data for this project come from this source: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har. If you use the document you create for this class for any purpose please cite them as they have been very generous in allowing their data to be used for this kind of assignment.
+
+## DOWNLOAD DATA AND LOAD LIBRARIES
+```{r, echo=FALSE,results='hide'}
+download.file('https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv',destfile='C:/Users/comp/Documents/CourseraR/Practical Machine Learning/train.csv')
+download.file('https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv',destfile='C:/Users/comp/Documents/CourseraR/Practical Machine Learning/test.csv')
+
+```
+```{r, warning=FALSE, message=FALSE}
+library(caret)
+library(rattle)
+```
+Loading the test data and train data.
+```{r}
+train_data <- read.csv("train.csv")
+test_data <- read.csv("test.csv")
+```
+
+## DATA CLEANSING
+
+### REMOVING NA VALUES
+
+Removing the columns i.e. predictors having near zero values.
+```{r}
+nzv <- nearZeroVar(train_data)
+train_data <- train_data[,-nzv]
+test_data <- test_data[,-nzv]
+```
+Removing NA values from  the datasets.
+```{r}
+na_val_col <- sapply(train_data, function(x) mean(is.na(x))) > 0.95
+train_data <- train_data[,na_val_col == FALSE]
+test_data <- test_data[,na_val_col == FALSE]
+
+dim(train_data)
+
+```
+Removing first 7 variables because they are non numeric.
+```{r}
+train_data <- train_data[,-(1:7)]
+test_data <- test_data[,-(1:7)]
+
+```
+### PARTITIONING THE DATA
+
+We split the train data into two dataset training set and testing set having 60% and 40% of the original window  respectively.
+
+```{r}
+inTrain<- createDataPartition(train_data$classe, p=0.6, list=FALSE)
+training<- train_data[inTrain,]
+testing<- train_data[-inTrain,]
+
+```
+
+## VISUALIZING DATA
+The plot is shown as follows
+```{r}
+plot(as.factor(training$classe), col="orange", main="Levels of the variable classe", xlab="classe levels",
+     ylab="Frequency")
+```
+
+## TRAINING MODELS AND PREDICTING MODELS
+
+
+### PREDICTING USING TRESS
+Training the model
+```{r}
+library(rattle)
+model_t <- train(classe~., data=training, method="rpart")
+fancyRpartPlot(model_t$finalModel)
+```
+Predicting the model
+```{r}
+model_p <- predict(model_t, testing)
+confusionMatrix(model_p, as.factor(testing$classe))
+```
+The accuracy of this method is: 0.5297  
+
+## CONCLUSION
+  
+  Here, we elected decision tree model, though the accuracy is not high but model works fine.
+### FINAL PREDICTION
+```{R}
+
+Final_prediction <- predict(model_t, test_data )
+Final_prediction
+```
+
+
+
+
+
+
+
+
